@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PHARR PD: CAT NABBERS</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --navy:#0D1D41;--panel:#0E1825;--bg2:#0A1221;
+  --gold:#F5C518;--blue:#1565C0;--blue2:#1976D2;--blue3:#42A5F5;
+  --red:#FF1744;--green:#00E676;--amber:#FF8F00;
+  --cat:#FF6B6B;--cat2:#FF8E8E;--paw:#CC4444;
+  --stone:#7B8FA6;--stone2:#5C7080;--stone3:#9BAFC0;
+  --window-safe:#0A1628;--window-cat:rgba(255,80,80,.18);
+  --window-clear:#082215;
+  --cop-blue:#1A3A8F;--cop-white:#E8EEF8;
+  --street:#1A1A2A;--sidewalk:#252535;
+  --c0:#5C85D6;--c1:#4A4A6A;--c2:#3A7A5C;--c3:#C4A020;
+}
+html,body{height:100%;background:var(--navy);color:#fff;font-family:'Barlow',sans-serif;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;
+  background-image:radial-gradient(rgba(255,255,255,.03) 1px,transparent 1px);
+  background-size:18px 18px;z-index:0;}
+.screen{display:none;position:relative;z-index:1;min-height:100vh;}
+.screen.active{display:flex;flex-direction:column;}
+
+/* ── TITLE ── */
+#s-title{align-items:center;justify-content:center;text-align:center;padding:16px;gap:10px;}
+.title-top{font-family:'Press Start 2P',monospace;font-size:clamp(7px,1.4vw,11px);
+  color:var(--blue3);letter-spacing:.18em;margin-bottom:2px;}
+.title-main{font-family:'Press Start 2P',monospace;font-size:clamp(16px,4vw,38px);
+  color:var(--cop-white);text-shadow:0 0 18px rgba(66,165,245,.5),0 4px 0 #0A1840;
+  letter-spacing:.04em;animation:copGlow 2.5s ease-in-out infinite;}
+@keyframes copGlow{0%,100%{text-shadow:0 0 18px rgba(66,165,245,.4),0 4px 0 #0A1840;}
+  50%{text-shadow:0 0 36px rgba(66,165,245,.7),0 4px 0 #0A1840;}}
+.title-sub{font-family:'Press Start 2P',monospace;font-size:clamp(9px,2vw,17px);
+  color:var(--cat);letter-spacing:.08em;animation:catBlink 1.4s step-end infinite;}
+@keyframes catBlink{50%{opacity:0;}}
+.chars-row{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;width:100%;max-width:760px;}
+.char-card{flex:1;min-width:150px;max-width:180px;border:3px solid rgba(255,255,255,.13);
+  background:var(--bg2);padding:12px 8px;text-align:center;transition:border-color .15s;}
+.char-emoji{font-size:36px;display:block;margin-bottom:6px;}
+.char-pxname{font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:.05em;margin-bottom:4px;}
+.char-role{font-size:11px;color:rgba(255,255,255,.38);margin-bottom:8px;}
+.px-input{width:100%;background:rgba(0,0,0,.4);border:3px solid rgba(255,255,255,.16);
+  color:#fff;font-family:'Barlow',sans-serif;font-size:12px;font-weight:700;
+  padding:6px 7px;text-align:center;outline:none;}
+.px-input:focus{border-color:var(--gold);}
+.px-input::placeholder{color:rgba(255,255,255,.22);}
+.rules-box{border:3px dashed rgba(255,255,255,.1);padding:10px 18px;
+  max-width:640px;font-size:11px;color:rgba(255,255,255,.48);line-height:1.8;text-align:left;}
+.rules-box b{color:var(--gold);}
+.deploy-btn{border:3px solid var(--blue3);color:var(--blue3);background:transparent;
+  font-family:'Press Start 2P',monospace;font-size:11px;padding:12px 30px;cursor:pointer;
+  text-shadow:0 0 8px rgba(66,165,245,.6);box-shadow:0 0 14px rgba(66,165,245,.2);
+  letter-spacing:.06em;transition:all .1s;}
+.deploy-btn:active{transform:translate(2px,2px);}
+
+/* ── GAME ── */
+#s-game{flex-direction:column;overflow:hidden;}
+
+.hud{background:var(--bg2);border-bottom:3px solid rgba(255,255,255,.06);
+  padding:5px 10px;display:flex;align-items:center;gap:7px;flex-shrink:0;}
+.hud-title{font-family:'Press Start 2P',monospace;font-size:7px;color:var(--blue3);white-space:nowrap;}
+.hud-scores{display:flex;gap:4px;flex:1;justify-content:center;}
+.hs{border:3px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);
+  padding:3px 7px;text-align:center;min-width:78px;transition:border-color .2s;}
+.hs.active{animation:activeHud .5s ease-in-out infinite alternate;}
+@keyframes activeHud{from{border-color:rgba(255,255,255,.12);}to{border-color:rgba(255,255,255,.7);box-shadow:0 0 9px rgba(255,255,255,.12);}}
+.hs-em{font-size:12px;}.hs-nm{font-size:8px;font-weight:700;color:rgba(255,255,255,.5);}
+.hs-pt{font-family:'Press Start 2P',monospace;font-size:11px;}
+.px-badge{border:3px solid;padding:3px 7px;font-family:'Press Start 2P',monospace;font-size:7px;white-space:nowrap;}
+.combo-d{font-family:'Press Start 2P',monospace;font-size:8px;color:var(--gold);
+  border:3px solid var(--gold);padding:3px 6px;display:none;}
+.combo-d.show{display:block;}
+
+.game-body{flex:1;display:grid;grid-template-columns:1fr 300px;min-height:0;}
+
+/* BUILDING PANEL */
+.building-panel{display:flex;flex-direction:column;padding:8px 10px;gap:0;overflow:hidden;position:relative;}
+.bpanel-label{font-family:'Press Start 2P',monospace;font-size:6px;color:rgba(255,255,255,.18);
+  letter-spacing:.1em;margin-bottom:4px;}
+.building-wrap{position:relative;flex:1;display:flex;flex-direction:column;}
+
+.building-facade{
+  background:var(--stone);
+  border:4px solid var(--stone2);
+  border-bottom:none;
+  border-radius:6px 6px 0 0;
+  flex:1;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.building-facade::before{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0px,rgba(0,0,0,.07) 2px,transparent 2px,transparent 28px);
+  pointer-events:none;}
+.building-roof{
+  background:linear-gradient(180deg,var(--stone2) 0%,var(--stone) 100%);
+  border-bottom:4px solid var(--stone2);
+  padding:6px 10px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;position:relative;z-index:1;
+}
+.roof-text{font-family:'Press Start 2P',monospace;font-size:clamp(5px,1vw,8px);
+  color:var(--gold);letter-spacing:.07em;text-shadow:0 2px 4px rgba(0,0,0,.5);}
+.roof-flag{font-size:16px;}
+.building-columns{display:flex;justify-content:space-around;padding:4px 8px 0;position:relative;z-index:1;}
+.col-stripe{width:6px;background:var(--stone2);opacity:.55;border-radius:2px 2px 0 0;height:10px;}
+
+.windows-area{flex:1;padding:8px;display:flex;flex-direction:column;gap:5px;position:relative;z-index:1;}
+.windows-row{display:flex;gap:5px;flex:1;}
+.window{flex:1;background:var(--window-safe);border:2px solid rgba(0,0,0,.3);
+  border-radius:3px;position:relative;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;
+  transition:background .2s,border-color .2s;overflow:hidden;cursor:default;}
+.window::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:2px;height:100%;background:rgba(0,0,0,.18);}
+.window::after{content:'';position:absolute;top:50%;left:0;transform:translateY(-50%);
+  height:2px;width:100%;background:rgba(0,0,0,.18);}
+.window.attacked{background:var(--window-cat);border-color:rgba(255,80,80,.55);cursor:pointer;
+  animation:catFlicker .7s ease-in-out infinite alternate;}
+.window.attacked:hover{background:rgba(255,80,80,.32);transform:scale(1.03);}
+@keyframes catFlicker{from{border-color:rgba(255,80,80,.4);}to{border-color:rgba(255,200,80,.75);box-shadow:inset 0 0 10px rgba(255,80,80,.3);}}
+.window.cleared{background:var(--window-clear);border-color:rgba(0,230,118,.35);}
+.window.cleared::before,.window.cleared::after{display:none;}
+.w-icon{font-size:clamp(10px,1.4vw,16px);line-height:1;position:relative;z-index:2;}
+.w-name{font-size:clamp(4px,.6vw,7px);color:rgba(255,255,255,.5);font-weight:700;
+  line-height:1.2;text-align:center;position:relative;z-index:2;padding:0 1px;word-break:break-word;}
+.w-vip{position:absolute;top:1px;left:1px;font-size:8px;z-index:3;}
+.w-saved{position:absolute;top:1px;right:1px;font-size:8px;z-index:3;}
+
+/* Cat nabber overlay on attacked windows */
+.cat-tag{position:absolute;bottom:1px;right:1px;font-size:10px;z-index:4;
+  animation:catBounce .5s ease-in-out infinite alternate;}
+@keyframes catBounce{from{transform:translateY(0);}to{transform:translateY(-3px);}}
+
+/* STREET */
+.street-wrap{
+  background:var(--street);
+  border:4px solid var(--stone2);border-top:none;
+  height:clamp(50px,8vw,72px);
+  position:relative;flex-shrink:0;overflow:hidden;
+}
+.street-wrap::before{content:'';position:absolute;top:50%;left:0;right:0;height:4px;
+  background:repeating-linear-gradient(90deg,#fff 0,#fff 16px,transparent 16px,transparent 36px);
+  transform:translateY(-50%);opacity:.1;}
+.street-wrap::after{content:'';position:absolute;top:0;left:0;right:0;height:10px;
+  background:var(--sidewalk);}
+
+/* COP CAR */
+.cop-car{
+  position:absolute;bottom:8px;
+  width:clamp(56px,9.5vw,95px);
+  height:clamp(24px,4.5vw,44px);
+  transition:left .55s cubic-bezier(.4,0,.2,1);
+  z-index:10;
+}
+/* CSS cop car body */
+.car-body{position:absolute;bottom:10px;left:0;right:0;top:0;
+  background:var(--cop-blue);border-radius:3px 8px 3px 3px;}
+.car-body::before{content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(90deg,transparent 0,transparent 40%,rgba(255,255,255,.12) 40%,rgba(255,255,255,.12) 60%,transparent 60%);
+  border-radius:inherit;}
+.car-top{position:absolute;bottom:40%;right:12%;width:48%;top:10%;
+  background:#D8E4F8;border-radius:2px 4px 2px 2px;}
+.car-stripe{position:absolute;top:40%;left:5%;right:35%;height:4px;
+  background:linear-gradient(90deg,var(--cop-white) 0,var(--cop-white) 55%,#CC0000 55%,#CC0000 100%);
+  opacity:.8;}
+.lightbar{position:absolute;top:-5px;left:20%;width:50%;height:5px;
+  background:#222;border-radius:2px;}
+.lightbar-r{position:absolute;top:0;left:0;width:48%;height:100%;
+  background:#FF2222;border-radius:2px;animation:lbR .35s step-end infinite;}
+.lightbar-b{position:absolute;top:0;right:0;width:48%;height:100%;
+  background:#2244FF;border-radius:2px;animation:lbB .35s step-end infinite;}
+@keyframes lbR{0%,49%{opacity:1;}50%,100%{opacity:.1;}}
+@keyframes lbB{0%,49%{opacity:.1;}50%,100%{opacity:1;}}
+.car-wheel{position:absolute;bottom:-10px;
+  width:clamp(11px,1.6vw,17px);height:clamp(11px,1.6vw,17px);
+  background:#1A1A1A;border-radius:50%;border:3px solid #333;}
+.car-wheel-l{left:10%;}
+.car-wheel-r{right:32%;}
+.cop-car.moving .car-wheel{animation:wheelSpin .25s linear infinite;}
+@keyframes wheelSpin{from{transform:rotate(0);}to{transform:rotate(360deg);}}
+.car-exhaust{position:absolute;left:-7px;top:25%;width:7px;height:7px;
+  border-radius:50%;background:rgba(120,120,120,.45);display:none;}
+.cop-car.moving .car-exhaust{display:block;animation:exhaustPuff .35s ease-out infinite;}
+@keyframes exhaustPuff{0%{opacity:.6;transform:scale(1);}100%{opacity:0;transform:scale(2.2) translateX(-7px);}}
+.siren-sound{display:none;}
+
+/* CANVASES */
+#cat-canvas{position:absolute;inset:0;pointer-events:none;z-index:5;}
+#cuff-canvas{position:absolute;inset:0;pointer-events:none;z-index:6;}
+
+/* RIGHT PANEL */
+.right-panel{border-left:3px solid rgba(255,255,255,.05);background:var(--panel);
+  display:flex;flex-direction:column;overflow:hidden;}
+.q-panel{flex:1;padding:9px;display:flex;flex-direction:column;gap:7px;overflow-y:auto;}
+.cp-banner{border:3px solid rgba(255,255,255,.1);padding:7px 9px;display:flex;align-items:center;gap:7px;}
+.cp-em{font-size:20px;}.cp-nm{font-family:'Press Start 2P',monospace;font-size:9px;letter-spacing:.04em;}
+.cp-role{font-size:10px;color:rgba(255,255,255,.35);margin-top:2px;}
+.timer-row{display:flex;align-items:center;gap:5px;}
+.timer-track{flex:1;height:9px;background:rgba(0,0,0,.5);border:3px solid rgba(255,255,255,.09);}
+.timer-fill{height:100%;transition:width .9s linear;}
+.timer-num{font-family:'Press Start 2P',monospace;font-size:11px;min-width:20px;text-align:right;}
+.q-cat{font-family:'Press Start 2P',monospace;font-size:6px;letter-spacing:.09em;
+  opacity:.62;padding:2px 5px;border:3px solid rgba(255,255,255,.1);display:inline-block;}
+.q-text{font-family:'Barlow Condensed',sans-serif;font-size:clamp(13px,1.6vw,16px);
+  font-weight:700;line-height:1.45;color:#fff;min-height:46px;margin-top:5px;}
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+.opt-btn{border:3px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);
+  color:#fff;font-family:'Barlow',sans-serif;font-size:11px;font-weight:700;
+  padding:8px 6px;text-align:left;cursor:pointer;line-height:1.35;transition:all .08s;}
+.opt-btn:hover:not(:disabled){background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.36);}
+.opt-btn:disabled{cursor:not-allowed;}
+.opt-btn.correct{background:rgba(0,230,118,.16);border-color:var(--green);color:#A5D6A7;}
+.opt-btn.wrong{background:rgba(255,23,68,.16);border-color:var(--red);color:#FF8A80;}
+.opt-letter{display:inline-block;width:14px;height:14px;background:rgba(255,255,255,.09);
+  font-size:7px;font-weight:900;text-align:center;line-height:14px;margin-right:4px;}
+.feedback-box{border:3px solid;padding:7px 9px;font-size:11px;line-height:1.55;display:none;}
+.feedback-box.show{display:block;}
+.feedback-box.ok{border-color:var(--green);background:rgba(0,230,118,.07);color:#C8E6C9;}
+.feedback-box.no{border-color:var(--red);background:rgba(255,23,68,.07);color:#FFCDD2;}
+.feedback-box strong{font-family:'Press Start 2P',monospace;font-size:7px;display:block;margin-bottom:4px;}
+.ext-prompt{border:3px solid var(--blue3);background:rgba(66,165,245,.08);
+  padding:7px 9px;font-family:'Press Start 2P',monospace;font-size:7px;
+  color:var(--blue3);text-align:center;display:none;animation:extPulse .6s ease-in-out infinite alternate;}
+.ext-prompt.show{display:block;}
+@keyframes extPulse{from{opacity:.7;}to{opacity:1;box-shadow:0 0 10px rgba(66,165,245,.2);}}
+.next-wrap{justify-content:center;display:none;}
+.next-wrap.show{display:flex;}
+.next-btn{border:3px solid var(--gold);color:var(--gold);background:transparent;
+  font-family:'Press Start 2P',monospace;font-size:9px;padding:9px 20px;cursor:pointer;letter-spacing:.05em;}
+.next-btn:active{transform:translate(2px,2px);}
+
+/* RESULT */
+#s-result{align-items:center;justify-content:center;text-align:center;padding:20px;gap:12px;}
+.r-headline{font-family:'Press Start 2P',monospace;font-size:clamp(14px,4vw,30px);letter-spacing:.04em;}
+.r-headline.win{color:var(--gold);text-shadow:0 0 28px var(--gold),0 4px 0 #8B6900;}
+.r-headline.lose{color:var(--cat);text-shadow:0 0 28px var(--cat),0 4px 0 #800;}
+.podium{display:flex;align-items:flex-end;gap:8px;justify-content:center;}
+.pod{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.pod-em{font-size:28px;}.pod-nm{font-family:'Press Start 2P',monospace;font-size:7px;max-width:86px;line-height:1.5;}
+.pod-sc{font-size:11px;color:rgba(255,255,255,.5);}
+.pod-blk{border:3px solid rgba(255,255,255,.28);display:flex;align-items:center;justify-content:center;font-family:'Press Start 2P',monospace;}
+.pod-blk.p1{background:var(--gold);color:#000;width:88px;height:72px;font-size:15px;}
+.pod-blk.p2{background:#78909C;color:#fff;width:74px;height:58px;font-size:12px;}
+.pod-blk.p3{background:#8D6E63;color:#fff;width:66px;height:46px;font-size:10px;}
+.pod-blk.p4{background:#546E7A;color:#fff;width:60px;height:38px;font-size:8px;}
+.stats-row{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;}
+.stat-px{border:3px solid rgba(255,255,255,.12);background:var(--bg2);padding:8px 13px;text-align:center;}
+.stat-val{font-family:'Press Start 2P',monospace;font-size:14px;color:var(--gold);display:block;margin-bottom:4px;}
+.stat-lbl{font-size:9px;color:rgba(255,255,255,.36);letter-spacing:.06em;text-transform:uppercase;}
+.r-actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;}
+
+/* OVERLAYS */
+#screen-flash{position:fixed;inset:0;pointer-events:none;z-index:998;opacity:0;transition:opacity .1s;}
+@keyframes floatScore{from{transform:translateX(-50%) translateY(0);opacity:1;}to{transform:translateX(-50%) translateY(-48px);opacity:0;}}
+@keyframes comboZap{0%{transform:translateX(-50%) scale(.5);}60%{transform:translateX(-50%) scale(1.15);}100%{transform:translateX(-50%) scale(1);}}
+@keyframes screenShake{0%,100%{transform:none;}25%{transform:translate(-4px,2px);}50%{transform:translate(4px,-2px);}75%{transform:translate(-2px,3px);}}
+@keyframes cuffArc{from{transform:translate(0,0);opacity:1;}to{transform:translate(var(--tx),var(--ty));opacity:0;}}
+.danger-mode .hud{animation:dangerHud .65s ease-in-out infinite alternate;}
+@keyframes dangerHud{from{border-bottom-color:rgba(255,23,68,.12);}to{border-bottom-color:rgba(255,23,68,.8);box-shadow:0 2px 10px rgba(255,23,68,.2);}}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .game-body{grid-template-columns:1fr;grid-template-rows:auto 1fr;}
+  .building-panel{order:2;padding:5px 6px;}
+  .right-panel{order:1;border-left:none;border-bottom:3px solid rgba(255,255,255,.05);}
+  .street-wrap{height:44px;}
+  .bpanel-label{display:none;}
+}
+@media(max-width:480px){
+  .game-body{grid-template-rows:55vh 1fr;}
+  .hud-title{display:none;}
+  .title-main{font-size:clamp(13px,5vw,26px);}
+}
+</style>
+</head>
+<body>
+<div id="screen-flash"></div>
+
+<!-- TITLE -->
+<div class="screen active" id="s-title">
+  <div class="title-top">PHARR POLICE DEPARTMENT</div>
+  <div class="title-main">PHARR PD</div>
+  <div class="title-sub">🐱 CAT NABBERS STRIKE! 🐱</div>
+  <div style="font-size:9px;color:rgba(255,255,255,.26);letter-spacing:.08em;">CITY OF PHARR · OFFICE OF STRATEGIC EXCELLENCE</div>
+
+  <div class="chars-row">
+    <div class="char-card" style="border-color:#5C85D644">
+      <img src="images/ammo.png" class="char-emoji" style="width: 120px;height: 120px;object-fit: contain;display: block; margin: 0 auto;">
+      <div class="char-pxname" style="color:#5C85D6">AMMO</div>
+      <div class="char-role">Good Boy</div>
+      <input class="px-input" id="pname-0" placeholder="PLAYER 1" maxlength="10">
+    </div>
+    <div class="char-card" style="border-color:#88888844">
+      <img src="images/shadow.png" class="char-emoji" style="width: 120px;height: 120px;object-fit: contain;display: block; margin: 0 auto;">
+      <div class="char-pxname" style="color:#888">SHADOW</div>
+      <div class="char-role">Mental Health Unit</div>
+      <input class="px-input" id="pname-1" placeholder="PLAYER 2" maxlength="10">
+    </div>
+    <div class="char-card" style="border-color:#3A7A5C44">
+      <img src="images/gunner.png" class="char-emoji" style="width: 120px;height: 120px;object-fit: contain;display: block; margin: 0 auto;">
+      <div class="char-pxname" style="color:#3A7A5C">GUNNER</div>
+      <div class="char-role">K-9 Unit</div>
+      <input class="px-input" id="pname-2" placeholder="PLAYER 3" maxlength="10">
+    </div>
+    <div class="char-card" style="border-color:#C4A02044">
+      <img src="images/chase.png" class="char-emoji" style="width: 120px;height: 120px;object-fit: contain;display: block; margin: 0 auto;">
+      <div class="char-pxname" style="color:#C4A020">CHASE</div>
+      <div class="char-role">Mounted Patrol</div>
+      <input class="px-input" id="pname-3" placeholder="PLAYER 4" maxlength="10">
+    </div>
+  </div>
+
+  <button class="deploy-btn" onclick="startGame()">🚔 DISPATCH THE UNIT!</button>
+
+  <div class="rules-box">
+    <b>SITUATION:</b> A gang of Cat Nabbers has infiltrated City Hall! They're attacking departments across the City Hall building!<br><br>
+    <b>HOW TO PLAY:</b> Each officer answers a Pharr Way question on their turn. Correct → the patrol car races to the window and apprehends the cat! Wrong → cats spread to a new department.<br>
+    Build combos for 1.5x · 2x · 3x score multipliers. VIP departments (⭐) earn bonus points. Secure all 20 departments to win!
+  </div>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="s-game">
+  <div class="hud" id="hud">
+    <div class="hud-title">PHARR PD</div>
+    <div class="hud-scores" id="hud-scores"></div>
+    <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+      <div class="combo-d" id="combo-d">x1</div>
+      <div class="px-badge" id="cat-badge" style="border-color:#FF6B6B;color:#FF6B6B">🐱 0</div>
+      <div class="px-badge" id="round-badge" style="border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.38)">R1/20</div>
+    </div>
+  </div>
+
+  <div class="game-body">
+    <!-- BUILDING PANEL -->
+    <div class="building-panel">
+      <div class="bpanel-label">CITY HALL — CITY OF PHARR</div>
+      <div class="building-wrap">
+        <div class="building-facade" id="building-facade">
+          <div class="building-roof">
+            <div class="roof-text">CITY HALL · PHARR PD DISPATCH</div>
+            <div class="roof-flag">🏛️</div>
+          </div>
+          <div class="building-columns">
+            <div class="col-stripe"></div><div class="col-stripe"></div>
+            <div class="col-stripe"></div><div class="col-stripe"></div>
+            <div class="col-stripe"></div>
+          </div>
+          <div class="windows-area" id="windows-area"></div>
+        </div>
+        <div class="street-wrap" id="street-wrap">
+          <div class="cop-car" id="cop-car">
+            <div class="car-body">
+              <div class="car-stripe"></div>
+              <div class="car-exhaust"></div>
+            </div>
+            <div class="car-top"></div>
+            <div class="lightbar">
+              <div class="lightbar-r"></div>
+              <div class="lightbar-b"></div>
+            </div>
+            <div class="car-wheel car-wheel-l"></div>
+            <div class="car-wheel car-wheel-r"></div>
+          </div>
+        </div>
+        <canvas id="cat-canvas"></canvas>
+        <canvas id="cuff-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Q PANEL -->
+    <div class="right-panel">
+      <div class="q-panel">
+        <div class="cp-banner" id="cp-banner"></div>
+        <div class="timer-row">
+          <div class="timer-track"><div class="timer-fill" id="timer-fill" style="width:100%;background:var(--green)"></div></div>
+          <div class="timer-num" id="timer-num">25</div>
+        </div>
+        <div>
+          <div class="q-cat" id="q-cat">CATEGORY</div>
+          <div class="q-text" id="q-text" style="margin-top:5px">Get ready, officer...</div>
+        </div>
+        <div class="opts-grid" id="opts-grid"></div>
+        <div class="feedback-box" id="feedback-box"></div>
+        <div class="ext-prompt" id="ext-prompt">🚔 CLICK A WINDOW TO APPREHEND!</div>
+        <div class="next-wrap" id="next-wrap">
+          <button class="next-btn" onclick="nextTurn()">NEXT DISPATCH ></button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="s-result">
+  <div class="r-headline" id="r-headline"></div>
+  <div style="font-size:10px;color:rgba(255,255,255,.35);letter-spacing:.08em;" id="r-sub"></div>
+  <div class="podium" id="r-podium"></div>
+  <div class="stats-row" id="r-stats"></div>
+  <div class="r-actions">
+    <button class="next-btn" onclick="goTitle()">NEW DISPATCH</button>
+    <button class="next-btn" style="border-color:var(--gold);color:var(--gold)" onclick="window.location.href='https://torres1030.github.io/pharr-way-activity-hub/'">HUB</button>
+  </div>
+</div>
+
+<script>
+var CHARS=[
+  {n:'AMMO',  e:'<img src="images/ammo.png" style="width:100px;height:100px;object-fit:contain;vertical-align:middle">',role:'Good Boy',color:'#5C85D6'},
+  {n:'SHADOW',e:'<img src="images/shadow.png" style="width:100px;height:100px;object-fit:contain;vertical-align:middle">',role:'Mental Health Unit',color:'#888888'},
+  {n:'GUNNER',e:'<img src="images/gunner.png" style="width:100px;height:100px;object-fit:contain;vertical-align:middle">',role:'K-9 Unit',color:'#3A7A5C'},
+  {n:'CHASE', e:'<img src="images/chase.png" style="width:100px;height:100px;object-fit:contain;vertical-align:middle">',role:'Mounted Patrol',color:'#C4A020'}
+];
+var BLDS=[
+  {n:'Mayor\'s Office',e:'🏛️',vip:true},{n:'Police HQ',   e:'🚔',vip:true},
+  {n:'Library',       e:'📚',vip:false},{n:'Parks & Rec', e:'🌳',vip:false},
+  {n:'Fire Station',  e:'🚒',vip:true}, {n:'Utilities',   e:'💧',vip:false},
+  {n:'Finance',       e:'💰',vip:false},{n:'Technology',  e:'💻',vip:false},
+  {n:'Human Res.',    e:'👥',vip:false},{n:'Public Works', e:'🔧',vip:false},
+  {n:'Bldg & Code',   e:'🏗️',vip:false},{n:'Muni Court',  e:'⚖️',vip:true},
+  {n:'Spec. Events',  e:'🎪',vip:false},{n:'EMS Station',  e:'🚑',vip:true},
+  {n:'Comms',         e:'📡',vip:false},{n:'Dev. Services',e:'🏢',vip:false},
+  {n:'Grants',        e:'📋',vip:false},{n:'Purchasing',   e:'🛒',vip:false},
+  {n:'City Bridge',   e:'🌉',vip:true}, {n:'Public Health',e:'🏥',vip:true}
+];
+
+var QS=[
+  // PHARR WAY - PRIDE
+  {c:'PHARR WAY — PRIDE',q:'What does PRIDE stand for at the City of Pharr?',
+   o:['Progress, Results, Innovation, Discipline, Excellence','Professionalism, Respect, Integrity, Discipline, Ethics','People, Resilience, Integrity, Dedication, Equity','Professionalism, Results, Innovation, Discipline, Empathy'],a:1,
+   w:'PRIDE = Professionalism, Respect, Integrity, Discipline, Ethics — the five values every Pharr employee upholds daily.'},
+  {c:'PHARR WAY — PRIDE',q:'Which PRIDE value means doing the right thing even when no one is watching?',
+   o:['Professionalism','Respect','Integrity','Discipline'],a:2,
+   w:'Integrity — being honest and ethical regardless of who is watching. Essential in public service.'},
+  {c:'PHARR WAY — PRIDE',q:'Discipline in PRIDE primarily means:',
+   o:['Strict attendance rules','Consistent high standards regardless of who is watching','Following orders only','Punishing poor performance'],a:1,
+   w:'Discipline is the commitment to show up with the same standard every single day — not because you have to, but because it\'s who you are.'},
+  {c:'PHARR WAY — PRIDE',q:'Which PRIDE value shapes how officers treat residents and colleagues?',
+   o:['Professionalism','Respect','Integrity','Ethics'],a:1,
+   w:'Respect — for residents, for colleagues, and for the community you serve. Every interaction is an opportunity to demonstrate it.'},
+  {c:'PHARR WAY — PRIDE',q:'The I in PRIDE stands for:',
+   o:['Innovation','Intelligence','Integrity','Inclusion'],a:2,
+   w:'Integrity — doing what is right, being honest, and maintaining ethical standards in all actions.'},
+  {c:'PHARR WAY — PRIDE',q:'"Excellence Every Day" is Pharr\'s commitment to:',
+   o:['Winning awards annually','Delivering the best on every interaction, every task, every day','Setting goals once a year','Being better than neighboring cities'],a:1,
+   w:'"Excellence Every Day" means every resident interaction, every process, every deliverable gets your best. Not occasionally — every day.'},
+
+  // PHARR WAY - STEP
+  {c:'PHARR WAY — STEP',q:'What does STEP stand for?',
+   o:['Strategy, Training, Excellence, Progress','Study, Track, Evaluate, Propose','Standards, Teams, Execution, Plans','System, Test, Evaluate, Proceed'],a:1,
+   w:'Study the problem · Track the current process · Evaluate root cause · Propose a solution. STEP is Pharr\'s structured improvement method.'},
+  {c:'PHARR WAY — STEP',q:'In STEP, the Study phase is about:',
+   o:['Writing the final solution','Identifying the problem, requirements, and establishing a clear problem statement','Presenting results to leadership','Celebrating the improvement'],a:1,
+   w:'S = Study the Problem. Define what the problem actually is, who is affected, and what success looks like before you do anything else.'},
+  {c:'PHARR WAY — STEP',q:'In the STEP Track phase, you are primarily:',
+   o:['Writing a proposal','Implementing your solution','Collecting baseline data and mapping the current process','Creating next year\'s budget'],a:2,
+   w:'T = Track the Current Process. Gather data, establish baseline performance, understand how the process actually works before changing it.'},
+  {c:'PHARR WAY — STEP',q:'The STEP Evaluate phase uses tools like:',
+   o:['Gantt charts and PowerPoints','Fishbone Diagrams, 5 Whys, and Pareto Analysis','Employee surveys only','Org charts and job descriptions'],a:1,
+   w:'E = Evaluate Root Cause. Fishbone Diagrams, 5 Whys, and Pareto Analysis help find the true driver of the problem — not just the symptom.'},
+  {c:'PHARR WAY — STEP',q:'The 5 Whys technique helps you:',
+   o:['List five team members responsible','Find the root cause by repeatedly asking why','Identify five solutions','Celebrate five successes'],a:1,
+   w:'Ask "why did this happen?" five times and you go from symptom to root cause. It\'s simple, powerful, and used in every strong STEP submittal.'},
+  {c:'PHARR WAY — STEP',q:'A strong STEP Propose phase always includes:',
+   o:['A vague improvement description','Measurable targets with specific numbers and timelines','A request for more budget','Only a list of what went wrong'],a:1,
+   w:'P = Propose Solutions. Include measurable targets, timelines, who is responsible, and controls to sustain gains after implementation.'},
+  {c:'PHARR WAY — STEP',q:'The Spanish equivalent of STEP at City of Pharr is:',
+   o:['STOP','PLAN','PASO','MEGA'],a:2,
+   w:'PASO = Piensa en el Problema, Analiza el Proceso, Soluciona la Causa Raíz, Ofrece e Implementa Soluciones — perfect for Pharr\'s bilingual workforce.'},
+  {c:'PHARR WAY — STEP',q:'A STEP Champion at Pharr is:',
+   o:['An outside consultant','An employee who completes a STEP submittal to improve a process','The director who approves budgets','A Baldrige examiner'],a:1,
+   w:'STEP Champions are Pharr employees at any level who identify a problem, work the STEP process, implement a real improvement, and are recognized citywide.'},
+
+  // PHARR WAY - KPI
+  {c:'PHARR WAY',q:'The Pharr Way Three Ps stand for:',
+   o:['Professionalism, Pride, Progress','People, Process, Performance','Purpose, Passion, Planning','Peter, Piper, Pizza'],a:1,
+   w:'People: who we serve and who we are. Process: our operations. The way we do things. Performance: Our results. How we measure success and keep innovating.'},
+  {c:'PHARR WAY — KPI',q:'What makes a gold-standard KPI?',
+   o:['It just needs a target number','Baseline, target, deadline, and a named data source','Department director approval only','A budget allocation attached'],a:1,
+   w:'Baseline + Target + Deadline + Data Source = Gold Standard KPI. Without all four, you cannot prove results are real or repeatable.'},
+  {c:'PHARR WAY — KPI',q:'A KPI baseline is:',
+   o:['The minimum passing score','Current performance before improvement begins','The goal you want to reach','Your department budget'],a:1,
+   w:'A baseline is your starting point — where you stand right now. Without it, you cannot prove improvement happened.'},
+  {c:'PHARR WAY — KPI',q:'If a KPI is consistently red, the Pharr Way response is:',
+   o:['Lower the target','Ignore it and focus on green KPIs','Initiate a STEP to find and fix the root cause','Change the data source'],a:2,
+   w:'A red KPI is an improvement signal. Launch a STEP, study the problem, and close the gap with structured improvement — don\'t just change the target.'},
+  {c:'PHARR WAY — KPI',q:'Top-decile performance means you rank:',
+   o:['Bottom 10%','Exactly average','Better than 90% of comparable organizations','At the minimum standard'],a:2,
+   w:'Top decile = 90th percentile. Pharr benchmarks against top-decile peers because we pursue role-model performance, not average.'},
+  {c:'PHARR WAY — KPI',q:'Which is the best SMART KPI?',
+   o:['Improve response times','Be more efficient','Reduce 911 average call processing time from 90s to 60s by Dec 31, 2025','Do better this year'],a:2,
+   w:'SMART KPIs are Specific, Measurable, Achievable, Relevant, Time-bound. Only the third option has a baseline, target, and deadline.'},
+
+  // PHARR WAY - BALDRIGE
+  {c:'PHARR WAY — BALDRIGE',q:'In Baldrige process evaluation, ADLI stands for:',
+   o:['Approach, Data, Learning, Integration','Approach, Deployment, Learning, Integration','Analysis, Development, Leadership, Integration','Accountability, Discipline, Learning, Improvement'],a:1,
+   w:'ADLI = Approach, Deployment, Learning, Integration — the four dimensions for evaluating how systematic and mature a process is.'},
+  {c:'PHARR WAY — BALDRIGE',q:'In Baldrige results evaluation, LTCI stands for:',
+   o:['Long-Term Continuous Improvement','Levels, Trends, Comparisons, Integration','Leadership, Training, Culture, Innovation','Lagging, Tracking, Comparing, Improving'],a:1,
+   w:'LTCI = Levels, Trends, Comparisons, Integration — evaluates whether your results are good, improving, competitive, and connected to priorities.'},
+  {c:'PHARR WAY — BALDRIGE',q:'The Baldrige framework is best described as:',
+   o:['An award only large organizations can pursue','A comprehensive leadership and management guide for any organization','A federal compliance requirement','A financial audit process'],a:1,
+   w:'Baldrige is an organizational improvement guide applicable to any organization. It\'s the framework Pharr adopted as the foundation of the Pharr Way.'},
+
+  // PHARR WAY - STRATEGIC
+  {c:'PHARR WAY — STRATEGY',q:'Which strategic objective most directly covers police and public safety?',
+   o:['Service Excellence','Economic Vitality','Safe & Secure Community','Quality of Life'],a:2,
+   w:'Safe & Secure Community covers law enforcement, fire protection, emergency management, and community safety — a cornerstone of Pharr\'s strategic vision.'},
+  {c:'PHARR WAY — STRATEGY',q:"Pharr's vision is to consistently lead the region in:",
+   o:['Economic output','Population growth','Municipal excellence, sustainability, and innovation','Bridge and trade revenue'],a:2,
+   w:"Pharr's vision drives every department — including PD — to be a regional role model in municipal excellence, not just meet minimum standards."},
+  {c:'PHARR WAY — STRATEGY',q:'WOW Stories at City of Pharr celebrate:',
+   o:['Complaints resolved this month','Employees who go above and beyond to serve residents or teammates','City Commission achievements','Annual report highlights only'],a:1,
+   w:'WOW Stories shine a light on employees living the Pharr Way — exceptional service, creative problem solving, and PRIDE values in action.'},
+  {c:'PHARR WAY — STRATEGY',q:'The phrase "When one team wins, we all win" reflects:',
+   o:['Individual performance incentives','Interdepartmental competition','Collective accountability and collaboration across all departments','Budget sharing requirements'],a:2,
+   w:"Pharr's team-first culture — departmental success is shared success. The Pharr Way isn't a department program, it's a citywide commitment."},
+
+  // PUBLIC SAFETY
+  {c:'PUBLIC SAFETY',q:'What is Pharr Police Department\'s primary mission alignment in PRIDE?',
+   o:['Economic Vitality','Service Excellence only','Safe & Secure Community and Service Excellence','Infrastructure improvements'],a:2,
+   w:'Pharr PD serves both Safe & Secure Community (core safety mission) and Service Excellence (every interaction reflects Pharr\'s commitment to residents).'},
+  {c:'PUBLIC SAFETY',q:'A KPI for police response time should include:',
+   o:['A rough estimate of improvement','Priority call category, baseline time, target time, deadline, and CAD data source','Only the target response time','A budget to buy faster cars'],a:1,
+   w:'All KPIs need baseline, target, deadline, and data source. For PD response time, specifying the call priority (P1, P2) and naming the CAD system as data source are critical.'},
+  {c:'PUBLIC SAFETY',q:'Community policing in Pharr is connected to which PRIDE value?',
+   o:['Discipline only','Professionalism, Respect, and Ethics — multiple values','Integrity only','Ethics only'],a:1,
+   w:'Community policing embodies multiple PRIDE values — Professionalism in conduct, Respect for residents, and Ethics in every interaction.'},
+  {c:'PUBLIC SAFETY',q:'If a police department process has recurring errors, the Pharr Way calls for:',
+   o:['Discipline the officers involved','Ignore it if the numbers look okay overall','Initiate a STEP to identify and address the root cause','Wait for the annual audit'],a:2,
+   w:'Recurring errors are exactly what STEP is designed for. Study the problem, track the process, evaluate root cause, propose a fix — don\'t just react each time.'},
+];
+
+// ── STATE ──
+var players=[],grid=[],currentPlayer=0,roundNum=1;
+var currentQ=null,timerInt=null,timerLeft=25;
+var waitCapture=false,usedQs=[],totalCaptured=0,comboCount=0;
+var TOTAL_ROUNDS=20;
+var carHomeLeft=16;
+
+// ── CANVAS + PARTICLES ──
+var catCanvas,catCtx,cuffCanvas,cuffCtx;
+var particles=[],rafId=null,cuffAnimId=null;
+var buildingRect=null;
+
+// Simple particle for cat paw prints / static
+function Particle(x,y,type){
+  this.x=x;this.y=y;this.type=type;this.life=1;
+  if(type==='static'){
+    this.vx=(Math.random()-.5)*2;this.vy=-(Math.random()*1.5+.5);
+    this.size=Math.floor(Math.random()*3+2);this.decay=.025;
+  } else if(type==='paw'){
+    this.vx=(Math.random()-.5)*.8;this.vy=-(Math.random()*.6+.2);
+    this.size=Math.floor(Math.random()*4+3);this.decay=.008;
+  } else { // spark
+    this.vx=(Math.random()-.5)*3;this.vy=-(Math.random()*2.5+1);
+    this.size=2;this.decay=.028;
+  }
+}
+Particle.prototype.update=function(){
+  this.x+=this.vx;this.y+=this.vy;
+  if(this.type==='static')this.vx*=.96;
+  else if(this.type==='spark')this.vy+=.08;
+  this.life-=this.decay;
+};
+Particle.prototype.draw=function(c){
+  if(this.life<=0)return;
+  var l=this.life;
+  if(this.type==='static'){
+    // red/pink static for cat chaos
+    var g=Math.floor(50*l);
+    c.fillStyle='rgb(255,'+g+','+g+')';c.globalAlpha=l*.7;
+  } else if(this.type==='paw'){
+    c.fillStyle='#FF8E8E';c.globalAlpha=l*.4;
+  } else {
+    c.fillStyle='#FFD700';c.globalAlpha=l;
+  }
+  c.fillRect(Math.floor(this.x),Math.floor(this.y),this.size,this.size);
+  c.globalAlpha=1;
+};
+
+function initCanvas(){
+  catCanvas=document.getElementById('cat-canvas');
+  cuffCanvas=document.getElementById('cuff-canvas');
+  catCtx=catCanvas.getContext('2d');
+  cuffCtx=cuffCanvas.getContext('2d');
+  resizeCanvases();
+  window.addEventListener('resize',function(){resizeCanvases();});
+  if(rafId)cancelAnimationFrame(rafId);
+  particles=[];animLoop();
+}
+function resizeCanvases(){
+  var facade=document.getElementById('building-facade');
+  var street=document.getElementById('street-wrap');
+  if(!facade||!street)return;
+  var fr=facade.getBoundingClientRect();
+  var sr=street.getBoundingClientRect();
+  var w=Math.floor(fr.width);
+  var h=Math.floor(fr.height+sr.height);
+  [catCanvas,cuffCanvas].forEach(function(c){
+    c.width=w;c.height=h;c.style.width=w+'px';c.style.height=h+'px';
+    c.style.top='0';c.style.left='0';
+  });
+  buildingRect={left:fr.left,top:fr.top,width:fr.width,height:fr.height,streetH:sr.height};
+}
+function getWindowPos(idx){
+  var win=document.getElementById('w'+idx);
+  if(!win||!buildingRect)return null;
+  var r=win.getBoundingClientRect();
+  return{x:r.left-buildingRect.left+r.width/2,y:r.top-buildingRect.top+r.height/2,
+         w:r.width,h:r.height,left:r.left,top:r.top};
+}
+function animLoop(){
+  if(!catCtx)return;
+  catCtx.clearRect(0,0,catCanvas.width,catCanvas.height);
+  grid.forEach(function(b,i){
+    if(b.state!=='attacked')return;
+    var pos=getWindowPos(i);if(!pos)return;
+    // cat chaos static
+    if(Math.random()<.45)particles.push(new Particle(pos.x+(Math.random()-.5)*pos.w*.4,pos.y,'static'));
+    if(Math.random()<.08)particles.push(new Particle(pos.x+(Math.random()-.5)*pos.w*.25,pos.y-pos.h*.25,'paw'));
+    if(Math.random()<.03)particles.push(new Particle(pos.x+(Math.random()-.5)*pos.w*.3,pos.y,'spark'));
+  });
+  if(particles.length>300)particles.splice(0,particles.length-300);
+  particles=particles.filter(function(p){p.update();if(p.life>0){p.draw(catCtx);return true;}return false;});
+  rafId=requestAnimationFrame(animLoop);
+}
+
+// ── CUFF ANIMATION (instead of water arc) ──
+function animateCuffArc(carX,carY,targetPos,onComplete){
+  cuffCtx.clearRect(0,0,cuffCanvas.width,cuffCanvas.height);
+  var frame=0,maxFrames=32;
+  function drawBeam(){
+    cuffCtx.clearRect(0,0,cuffCanvas.width,cuffCanvas.height);
+    frame++;
+    var progress=frame/maxFrames;
+    // Draw spotlight beam from car to window
+    var bx=carX+(targetPos.x-carX)*progress;
+    var by=carY+(targetPos.y-carY)*progress;
+    // beam trail
+    cuffCtx.beginPath();
+    cuffCtx.moveTo(carX,carY);
+    cuffCtx.lineTo(bx,by);
+    cuffCtx.strokeStyle='rgba(66,165,245,'+(progress*.4)+')';
+    cuffCtx.lineWidth=3;
+    cuffCtx.stroke();
+    // leading dot (spotlight / siren light)
+    cuffCtx.beginPath();
+    cuffCtx.arc(bx,by,4+Math.random()*2,0,Math.PI*2);
+    cuffCtx.fillStyle=frame%6<3?'#2244FF':'#FF2222';
+    cuffCtx.globalAlpha=.9;
+    cuffCtx.fill();
+    cuffCtx.globalAlpha=1;
+    // spark particles at target when near
+    if(progress>.7){
+      for(var k=0;k<3;k++){
+        particles.push(new Particle(targetPos.x+(Math.random()-.5)*targetPos.w*.3,targetPos.y,'spark'));
+      }
+    }
+    if(frame<maxFrames){
+      cuffAnimId=requestAnimationFrame(drawBeam);
+    } else {
+      cuffCtx.clearRect(0,0,cuffCanvas.width,cuffCanvas.height);
+      if(onComplete)onComplete();
+    }
+  }
+  drawBeam();
+}
+
+// ── COP CAR ANIMATION ──
+function moveCar(targetWindowIdx,onArrived){
+  var car=document.getElementById('cop-car');
+  var streetWrap=document.getElementById('street-wrap');
+  var winPos=getWindowPos(targetWindowIdx);
+  if(!winPos||!streetWrap){if(onArrived)onArrived();return;}
+  var streetR=streetWrap.getBoundingClientRect();
+  var carW=car.offsetWidth;
+  var targetLeft=Math.max(0,Math.min(winPos.left-streetR.left-carW/2,streetR.width-carW-4));
+  car.classList.add('moving');
+  car.style.left=Math.floor(targetLeft)+'px';
+  setTimeout(function(){car.classList.remove('moving');if(onArrived)onArrived();},620);
+}
+function returnCar(){
+  var car=document.getElementById('cop-car');
+  if(car)car.style.left=carHomeLeft+'px';
+}
+
+// ── VFX ──
+function flashScreen(color,alpha){
+  var f=document.getElementById('screen-flash');f.style.background=color;f.style.opacity=alpha||'.2';
+  setTimeout(function(){f.style.opacity='0';},130);
+}
+function shakeGame(){
+  var g=document.getElementById('s-game');g.style.animation='screenShake .28s ease-out';
+  setTimeout(function(){g.style.animation='';},300);
+}
+function spawnFloatScore(windowIdx,pts,color){
+  var pos=getWindowPos(windowIdx);if(!pos)return;
+  var div=document.createElement('div');
+  div.style.cssText='position:fixed;left:'+pos.left+'px;top:'+(pos.top-10)+'px;transform:translateX(-50%);font-family:"Press Start 2P",monospace;font-size:10px;color:'+(color||'#FFEE00')+';z-index:1001;pointer-events:none;text-shadow:0 0 8px currentColor;animation:floatScore .9s ease-out forwards;';
+  div.textContent='+'+pts;
+  document.body.appendChild(div);
+  setTimeout(function(){if(div.parentNode)div.parentNode.removeChild(div);},950);
+}
+function showComboPopup(){
+  var labels={2:'COMBO x1.5!',3:'COMBO x2!',5:'MAX COMBO!'};
+  if(!labels[comboCount])return;
+  var pop=document.createElement('div');
+  pop.style.cssText='position:fixed;left:50%;top:32%;font-family:"Press Start 2P",monospace;font-size:clamp(12px,3vw,20px);color:#FFEE00;text-shadow:0 0 20px #FFEE00;z-index:1002;pointer-events:none;animation:comboZap .48s ease-out;';
+  pop.textContent=labels[comboCount];
+  document.body.appendChild(pop);
+  setTimeout(function(){if(pop.parentNode)pop.parentNode.removeChild(pop);},500);
+}
+
+// ── HELPERS ──
+function el(id){return document.getElementById(id);}
+function showScreen(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});el(id).classList.add('active');}
+function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+function catCount(){return grid.filter(function(g){return g.state==='attacked';}).length;}
+function getMult(){return comboCount>=5?3:comboCount>=3?2:comboCount>=2?1.5:1;}
+
+// ── START ──
+function startGame(){
+  players=CHARS.map(function(c,i){
+    var inp=el('pname-'+i);
+    return{idx:i,name:(inp&&inp.value.trim())||c.n,e:c.e,color:c.color,score:0,captured:0,correct:0,wrong:0};
+  });
+  grid=BLDS.map(function(b){return{name:b.n,e:b.e,vip:b.vip,state:'normal'};});
+  currentPlayer=0;roundNum=1;usedQs=[];totalCaptured=0;comboCount=0;
+  shuffle([0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19]).slice(0,5).forEach(function(i){grid[i].state='attacked';});
+  showScreen('s-game');
+  setTimeout(function(){
+    var car=el('cop-car');
+    if(car){car.style.transition='none';car.style.left=carHomeLeft+'px';setTimeout(function(){car.style.transition='';},50);}
+    initCanvas();buildWindows();renderHud();
+    setTimeout(function(){resizeCanvases();loadQ();},120);
+  },80);
+}
+
+// ── BUILD WINDOWS ──
+function buildWindows(){
+  var area=el('windows-area');area.innerHTML='';
+  for(var r=0;r<4;r++){
+    var row=document.createElement('div');row.className='windows-row';
+    for(var c=0;c<5;c++){
+      var idx=r*5+c;if(idx>=grid.length)break;
+      var b=grid[idx];
+      var div=document.createElement('div');
+      div.className='window'+(b.state==='attacked'?' attacked':b.state==='cleared'?' cleared':'');
+      div.id='w'+idx;
+      var vip=b.vip?'<div class="w-vip">⭐</div>':'';
+      var saved=b.state==='cleared'?'<div class="w-saved">🔒</div>':'';
+      var cat=b.state==='attacked'?'<div class="cat-tag">🐱</div>':'';
+      div.innerHTML=vip+saved+cat+'<span class="w-icon">'+b.e+'</span><span class="w-name">'+b.name+'</span>';
+      if(b.state==='attacked'&&waitCapture){
+        (function(i){div.onclick=function(){clickWindow(i);};})(idx);
+      }
+      row.appendChild(div);
+    }
+    area.appendChild(row);
+  }
+}
+
+// ── CLICK WINDOW ──
+function clickWindow(idx){
+  if(!waitCapture||grid[idx].state!=='attacked')return;
+  waitCapture=false;
+  el('ext-prompt').className='ext-prompt';
+  buildWindows();
+  moveCar(idx,function(){
+    var pos=getWindowPos(idx);
+    var car=el('cop-car');
+    var streetR=el('street-wrap').getBoundingClientRect();
+    var carR=car.getBoundingClientRect();
+    var carTopX=carR.left-buildingRect.left+carR.width*.5;
+    var carTopY=carR.top-buildingRect.top;
+    if(pos){
+      animateCuffArc(carTopX,carTopY,pos,function(){
+        grid[idx].state='cleared';
+        var vip=grid[idx].vip;
+        var pts=vip?150:100;
+        players[currentPlayer].score+=pts;
+        players[currentPlayer].captured++;totalCaptured++;
+        flashScreen('#1565C0','.15');
+        spawnFloatScore(idx,pts,vip?'#F5C518':'#42A5F5');
+        buildWindows();renderHud();
+        setTimeout(function(){returnCar();},300);
+        if(catCount()===0){
+          setTimeout(function(){endGame(true);},800);
+        } else {
+          el('next-wrap').className='next-wrap show';
+        }
+      });
+    }
+  });
+}
+
+// ── HUD ──
+function renderHud(){
+  var bar=el('hud-scores');bar.innerHTML='';
+  players.forEach(function(p,i){
+    var div=document.createElement('div');
+    div.className='hs'+(i===currentPlayer?' active':'');
+    div.style.borderColor=p.color+(i===currentPlayer?'':'3A');
+    div.innerHTML='<div class="hs-em">'+p.e+'</div><div class="hs-nm" style="color:'+p.color+'">'+p.name+'</div><div class="hs-pt" style="color:'+p.color+'">'+p.score+'</div>';
+    bar.appendChild(div);
+  });
+  el('round-badge').textContent='R'+roundNum+'/'+TOTAL_ROUNDS;
+  el('cat-badge').textContent='🐱 '+catCount();
+  document.getElementById('s-game').classList.toggle('danger-mode',catCount()>=10);
+}
+
+// ── QUESTION ──
+function loadQ(){
+  waitCapture=false;
+  el('feedback-box').className='feedback-box';
+  el('ext-prompt').className='ext-prompt';
+  el('next-wrap').className='next-wrap';
+  var p=players[currentPlayer];
+  var banner=el('cp-banner');
+  banner.style.borderColor=p.color+'55';banner.style.background='rgba(0,0,0,.25)';
+  banner.innerHTML='<div class="cp-em">'+p.e+'</div><div><div class="cp-nm" style="color:'+p.color+'">'+p.name+'</div><div class="cp-role">'+CHARS[p.idx].role+'</div></div>';
+  var avail=QS.filter(function(_,i){return usedQs.indexOf(i)<0;});
+  if(!avail.length){usedQs=[];avail=QS.slice();}
+  var pick=avail[Math.floor(Math.random()*Math.min(avail.length,10))];
+  currentQ=pick;usedQs.push(QS.indexOf(pick));
+  el('q-cat').textContent=pick.c;el('q-text').textContent=pick.q;
+  var letters=['A','B','C','D'];
+  var og=el('opts-grid');og.innerHTML='';
+  pick.o.forEach(function(opt,i){
+    var btn=document.createElement('button');btn.className='opt-btn';
+    btn.innerHTML='<span class="opt-letter">'+letters[i]+'</span>'+opt;
+    (function(idx){btn.onclick=function(){answerQ(idx);};})(i);
+    og.appendChild(btn);
+  });
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerInt);timerLeft=25;
+  var fill=el('timer-fill'),num=el('timer-num');
+  fill.style.transition='none';fill.style.width='100%';fill.style.background='#00E676';
+  void fill.offsetWidth;
+  fill.style.transition='width 25s linear';fill.style.width='0%';
+  timerInt=setInterval(function(){
+    timerLeft--;num.textContent=timerLeft;
+    if(timerLeft<=10)fill.style.background='#FF1744';
+    else if(timerLeft<=18)fill.style.background='#FF8F00';
+    if(timerLeft<=0){clearInterval(timerInt);timeUp();}
+  },1000);
+}
+function stopTimer(){clearInterval(timerInt);el('timer-fill').style.transition='none';}
+
+function timeUp(){
+  var btns=el('opts-grid').querySelectorAll('.opt-btn');
+  btns.forEach(function(b,i){b.disabled=true;if(i===currentQ.a)b.classList.add('correct');});
+  players[currentPlayer].wrong++;comboCount=0;el('combo-d').className='combo-d';
+  spreadCats();
+  el('feedback-box').className='feedback-box no show';
+  el('feedback-box').innerHTML='<strong>TIME UP!</strong>'+currentQ.w;
+  flashScreen('#FF1744','.16');shakeGame();
+  buildWindows();renderHud();
+  el('next-wrap').className='next-wrap show';
+}
+
+function answerQ(idx){
+  stopTimer();
+  var btns=el('opts-grid').querySelectorAll('.opt-btn');
+  btns.forEach(function(b){b.disabled=true;});
+  var speed=timerLeft;
+  var base=speed>=20?150:speed>=14?125:speed>=8?100:75;
+  var mult=getMult();
+  if(idx===currentQ.a){
+    btns[idx].classList.add('correct');
+    comboCount++;
+    var pts=Math.round(base*mult);
+    players[currentPlayer].score+=pts;players[currentPlayer].correct++;
+    el('feedback-box').className='feedback-box ok show';
+    el('feedback-box').innerHTML='<strong>10-4! +'+ pts+' PTS'+(mult>1?' ('+mult.toFixed(1).replace('.0','')+'x!)':'')+' </strong>'+currentQ.w;
+    flashScreen('#1565C0','.14');
+    showComboPopup();
+    var cd=el('combo-d');
+    cd.textContent='x'+mult.toFixed(1).replace('.0','');
+    cd.className='combo-d'+(mult>1?' show':'');
+    if(catCount()>0){
+      waitCapture=true;
+      el('ext-prompt').className='ext-prompt show';
+      buildWindows();
+    } else {
+      el('next-wrap').className='next-wrap show';
+    }
+  } else {
+    btns[idx].classList.add('wrong');btns[currentQ.a].classList.add('correct');
+    players[currentPlayer].wrong++;comboCount=0;el('combo-d').className='combo-d';
+    spreadCats();
+    el('feedback-box').className='feedback-box no show';
+    el('feedback-box').innerHTML='<strong>NEGATIVE!</strong>Correct: "'+currentQ.o[currentQ.a]+'" — '+currentQ.w;
+    flashScreen('#FF1744','.16');shakeGame();
+    buildWindows();renderHud();
+    el('next-wrap').className='next-wrap show';
+  }
+  renderHud();
+}
+
+function spreadCats(){
+  var avail=grid.filter(function(b){return b.state==='normal';});
+  if(!avail.length)return;
+  avail[Math.floor(Math.random()*avail.length)].state='attacked';
+  if(Math.random()<.2){
+    var avail2=grid.filter(function(b){return b.state==='normal';});
+    if(avail2.length)avail2[Math.floor(Math.random()*avail2.length)].state='attacked';
+  }
+}
+
+function nextTurn(){
+  if(Math.random()<.1)spreadCats();
+  currentPlayer=(currentPlayer+1)%4;roundNum++;
+  if(roundNum>TOTAL_ROUNDS){endGame(false);return;}
+  if(catCount()>=19){endGame(false);return;}
+  buildWindows();renderHud();loadQ();
+}
+
+function endGame(won){
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  if(cuffAnimId){cancelAnimationFrame(cuffAnimId);cuffAnimId=null;}
+  var sorted=players.slice().sort(function(a,b){return b.score-a.score;});
+  var hl=el('r-headline');
+  hl.textContent=won?'CITY SECURED!':'CATS WIN... FOR NOW!';
+  hl.className='r-headline '+(won?'win':'lose');
+  el('r-sub').textContent=won?'Outstanding police work — all City Hall departments are secure!':'The cats were relentless. Excellence Every Day — City of Pharr PD.';
+  var bclasses=['p1','p2','p3','p4'],lbls=['1st','2nd','3rd','4th'];
+  var html='';
+  sorted.forEach(function(p,i){
+    html+='<div class="pod"><div class="pod-em">'+p.e+'</div><div class="pod-nm" style="color:'+p.color+'">'+p.name+'</div><div class="pod-sc">'+p.score+' pts</div><div class="pod-blk '+bclasses[i]+'">'+lbls[i]+'</div></div>';
+  });
+  el('r-podium').innerHTML=html;
+  var allC=players.reduce(function(s,p){return s+p.correct;},0);
+  var allW=players.reduce(function(s,p){return s+p.wrong;},0);
+  var pct=allC+allW>0?Math.round(allC/(allC+allW)*100):0;
+  el('r-stats').innerHTML=
+    '<div class="stat-px"><span class="stat-val">'+totalCaptured+'</span><span class="stat-lbl">Cats Nabbed</span></div>'+
+    '<div class="stat-px"><span class="stat-val">'+catCount()+'</span><span class="stat-lbl">Still Loose</span></div>'+
+    '<div class="stat-px"><span class="stat-val">'+pct+'%</span><span class="stat-lbl">Accuracy</span></div>'+
+    '<div class="stat-px"><span class="stat-val" style="font-size:11px">'+sorted[0].name+'</span><span class="stat-lbl">MVP</span></div>';
+  showScreen('s-result');
+}
+function goTitle(){
+  if(rafId){cancelAnimationFrame(rafId);rafId=null;}
+  if(cuffAnimId){cancelAnimationFrame(cuffAnimId);cuffAnimId=null;}
+  showScreen('s-title');
+}
+</script>
+</body>
+</html>
